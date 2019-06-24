@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="iOS,XCode,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="前言：近期对XCode加速编译做了一些研究，对网上的加快XCode编译速度的方法进行了总结，同时自己也举一反三写了个脚本优化提速，我想这篇文章应该是你看到的最全的XCode加速编译的解决方案。">
+<meta name="keywords" content="iOS,XCode">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XCode加速编译最佳实践">
+<meta property="og:url" content="http://yoursite.com/2019/03/16/XCode加速编译最佳实践/index.html">
+<meta property="og:site_name" content="Kx Blog">
+<meta property="og:description" content="前言：近期对XCode加速编译做了一些研究，对网上的加快XCode编译速度的方法进行了总结，同时自己也举一反三写了个脚本优化提速，我想这篇文章应该是你看到的最全的XCode加速编译的解决方案。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/11452136-4e4eea0caffb4454.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/11452136-14e83d804ba2314d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/11452136-cbec8404168c09a3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/11452136-8a8630561dea938a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/11452136-d4b26a22864b5574.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2019-06-24T02:11:39.145Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XCode加速编译最佳实践">
+<meta name="twitter:description" content="前言：近期对XCode加速编译做了一些研究，对网上的加快XCode编译速度的方法进行了总结，同时自己也举一反三写了个脚本优化提速，我想这篇文章应该是你看到的最全的XCode加速编译的解决方案。">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/11452136-4e4eea0caffb4454.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/03/16/XCode加速编译最佳实践/">
+
+
+
+
+
+  <title>XCode加速编译最佳实践 | Kx Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Kx Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">追求完美,世界因你而精彩</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/16/XCode加速编译最佳实践/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Kanxiang">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/img/avatar-hux-ny.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Kx Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">XCode加速编译最佳实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-16T10:05:14+08:00">
+                2019-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote><p>前言：近期对XCode加速编译做了一些研究，对网上的加快XCode编译速度的方法进行了总结，同时自己也举一反三写了个脚本优化提速，我想这篇文章应该是你看到的最全的XCode加速编译的解决方案。</p>
+</blockquote>
+
+<a id="more"></a>
+
+<h2 id="0x00-将Debug-Information-Format改为DWARF"><a href="#0x00-将Debug-Information-Format改为DWARF" class="headerlink" title="0x00 将Debug Information Format改为DWARF"></a>0x00 将Debug Information Format改为DWARF</h2><p>在project相应Target的Build Settings中，找到Debug Information Format这一项，将Debug时的DWARF with dSYM file改为DWARF。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/11452136-4e4eea0caffb4454.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="设置DWARF"></p>
+<blockquote>
+<p>注意：dSYM文件是保存16进制函数地址映射信息的中转文件，我们调试的 symbols 都会包含在这个文件中，如果你在调试过程中发现函数堆栈无法显示，或者你需要使用Profile工具分析app，你可能需要重新开启Debug为DWARF with dSYM file。</p>
+</blockquote>
+<h2 id="0x01-将Build-Active-Architecture-Only改为Yes"><a href="#0x01-将Build-Active-Architecture-Only改为Yes" class="headerlink" title="0x01 将Build Active Architecture Only改为Yes"></a>0x01 将Build Active Architecture Only改为Yes</h2><p>在project相应Target的Build Settings中，找到Build Active Architecture Only这一项，将Debug时的No改为Yes。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/11452136-14e83d804ba2314d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="将Build Active Architecture Only改为Yes"></p>
+<p>这一项设置的是是否仅编译当前架构的版本号，假设为No，会编译全部架构的版本号。须要注意的是，此选项在Release模式下必须为No。否则公布的ipa在部分设备上将不能执行。</p>
+<h2 id="0x02-增加XCode执行的线程数"><a href="#0x02-增加XCode执行的线程数" class="headerlink" title="0x02 增加XCode执行的线程数"></a>0x02 增加XCode执行的线程数</h2><p>可以根据自己Mac的性能，更改线程数设置5：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">defaults write com.apple.Xcode PBXNumberOfParallelBuildSubtasks 5</span><br></pre></td></tr></table></figure>
+
+<p>另外也有一个设置可以开启：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">defaults write com.apple.dt.Xcode ShowBuildOperationDuration YES</span><br></pre></td></tr></table></figure>
+
+<p>XCode默认使用与CPU核数相同的线程来进行编译，但由于编译过程中的IO操作往往比CPU运算要多，因此适当的提升线程数可以在一定程度上加快编译速度。</p>
+<p>至此，你可能觉得与网上搜到的有关XCode加速编译的文章并无不同，不过，精彩的往往在后面，<strong>下面让我隆重介绍一个独特的方案：</strong></p>
+<h2 id="0x03-优化Copy-Pod-Resources"><a href="#0x03-优化Copy-Pod-Resources" class="headerlink" title="0x03 优化Copy Pod Resources"></a>0x03 优化Copy Pod Resources</h2><p>如果你的项目使用了CocoaPod,并且项目中使用CocoaPod引用了很多第三方库，以及公司项目也是以组件的形式通过CocoaPod进行组件化拆分。那么你一定会遇到和我一样的问题，那就是Copy Pod Resources花费大量的时间：<br><img src="https://upload-images.jianshu.io/upload_images/11452136-cbec8404168c09a3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Copy Pod Resources花费时间"><br>上图是一个中等大小的项目，可以看到Build的时间总共耗时42.5s，而Copy Pod Resources却花费了34.3s，可见优化Copy Pods Resources带来的收益是相当可观的。</p>
+<p>我们知道Copy Pods Resources是用于将pod库中的资源文件拷贝到app目录下，因此如果文件越多越大，耗时自然就越长。更重要的是，Pod下的资源文件，通常情况下，在我们pod update后，不会发生改变，如果每次Build都去copy，实属浪费。因此我的解决方案是：</p>
+<blockquote>
+<p>仅在pod update后，Build才进行copy resources操作，避免每次Build都去copy</p>
+</blockquote>
+<p><strong>要达到此目的，你仅需要如下两步操作：</strong></p>
+<ol>
+<li><p>在工程的根目录下创建文件<code>copy_pod_resources_once.patch</code>并填入以下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">set -e</span><br><span class="line"></span><br><span class="line"># Add This To Copy Resource only once</span><br><span class="line">NONCE_FILE=&quot;$&#123;TARGET_BUILD_DIR&#125;/$&#123;UNLOCALIZED_RESOURCES_FOLDER_PATH&#125;/../copyresources-done-#Time#.nonce&quot;</span><br><span class="line">if [ -f &quot;$NONCE_FILE&quot; ]; then</span><br><span class="line">    printf &quot;$NONCE_FILE \n&quot;</span><br><span class="line">    printf &quot;already copied resources&quot;</span><br><span class="line">    exit 0</span><br><span class="line">else</span><br><span class="line">    touch &quot;$NONCE_FILE&quot;</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在podfile中加入如下代码，其中你需要把<code>YourProjectName</code>替换为你自己的工程名：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">post_install do |installer|</span><br><span class="line">    copy_pods_resources_path = &quot;Pods/Target Support Files/Pods-YourProjectName/Pods-YourProjectName-resources.sh&quot;</span><br><span class="line">    text = File.read(copy_pods_resources_path)</span><br><span class="line">    string_onceCopy = File.read(&quot;copy_pod_resources_once.patch&quot;)</span><br><span class="line">    string_time = Time.now.strftime(&quot;%Y%m%d%H%M%S&quot;)</span><br><span class="line">    string_onceCopy = string_onceCopy.gsub(&quot;#Time#&quot;, string_time)</span><br><span class="line">    text = text.gsub(&quot;set -e&quot;, string_onceCopy)</span><br><span class="line">    File.open(copy_pods_resources_path, &quot;w&quot;) &#123;|file| file.puts text&#125;</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>重新pod update后，第一次Build时间不变，第二次Build的时间会大幅缩短：<br><img src="https://upload-images.jianshu.io/upload_images/11452136-8a8630561dea938a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="优化Copy Pods Resources后"></p>
+<p>上述方法是我参考<a href="https://stackoverflow.com/questions/20649298/xcode-custom-shell-scripts-are-slowing-down-the-compiling-time" target="_blank" rel="noopener">这里</a>举一反三得到的升级版，各位看官有兴趣不妨一试，如有问题欢迎私信或留言。当然你也可以使用如下配置达到类似效果：<br><img src="https://upload-images.jianshu.io/upload_images/11452136-d4b26a22864b5574.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="设置Copy Pods Resources"><br>不过，这个设置需要在之前已经Build成功后再勾选上，否则会出现资源没有Copy导致的app资源丢失，也有可能出现崩溃。</p>
+<h2 id="0x04-使用CCache"><a href="#0x04-使用CCache" class="headerlink" title="0x04 使用CCache"></a>0x04 使用CCache</h2><blockquote>
+<p>CCache的原理是通过把项目的源文件用ccache编译器编译，然后缓存编译生成的信息，从而在下一次编译时，利用这个缓存加快编译的速度，目前支持的语言有：C、C++、Objective-C、Objective-C++，但是如果找不到ccache编译器，那么还是会选择clang编译器来编译源文件。<br>CCache的使用方法这里不再赘述，配置有些许麻烦，但是如果你的项目代码量较大，效果还是很显著的，您可以参考这边文章： <a href="https://www.cnblogs.com/fishbay/p/7217398.html" target="_blank" rel="noopener">ccache - 让Xcode编译速度飞起来</a></p>
+</blockquote>
+<p>上述的每一个方法或多或少都会带来副作用，大家在使用时需要根据项目的实际情况酌情选择，最后对上述所有方法做一个汇总：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th align="center">原理</th>
+<th align="center">加速效果</th>
+<th align="center">使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>将Debug Information Format改为DWARF</td>
+<td align="center">修改XCode配置，不生成dSYM文件</td>
+<td align="center">✨✨✨</td>
+<td align="center">所有</td>
+</tr>
+<tr>
+<td>将Build Active Architecture Only改为Yes</td>
+<td align="center">修改XCode配置，仅编译当前架构</td>
+<td align="center">✨✨</td>
+<td align="center">所有</td>
+</tr>
+<tr>
+<td>增加XCode执行的线程数</td>
+<td align="center">修改XCode配置，利用CPU多核</td>
+<td align="center">✨</td>
+<td align="center">所有</td>
+</tr>
+<tr>
+<td>优化Copy Pod Resources</td>
+<td align="center">针对资源，优化Copy Pods Resources</td>
+<td align="center">✨✨✨✨</td>
+<td align="center">pod库资源文件较多、较大</td>
+</tr>
+<tr>
+<td>使用CCache</td>
+<td align="center">针对代码，缓存编译信息</td>
+<td align="center">✨✨✨✨</td>
+<td align="center">源文件较多</td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/XCode/" rel="tag"># XCode</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/16/ipa上传成功出现-导入此构建版本时出错/" rel="next" title="ipa上传成功出现:导入此构建版本时出错">
+                <i class="fa fa-chevron-left"></i> ipa上传成功出现:导入此构建版本时出错
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/img/avatar-hux-ny.jpg" alt="Kanxiang">
+          <p class="site-author-name" itemprop="name">Kanxiang</p>
+           
+              <p class="site-description motion-element" itemprop="description">从事移动端iOS开发，闲时搞搞黑科技，玩玩Python、搞搞破解 | Kx，iOS & Mobile Lover，Software Engineer，UX Designer | 这里是 @Kx 的个人博客，与你一起发现更大的世界。</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-将Debug-Information-Format改为DWARF"><span class="nav-number">1.</span> <span class="nav-text">0x00 将Debug Information Format改为DWARF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-将Build-Active-Architecture-Only改为Yes"><span class="nav-number">2.</span> <span class="nav-text">0x01 将Build Active Architecture Only改为Yes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-增加XCode执行的线程数"><span class="nav-number">3.</span> <span class="nav-text">0x02 增加XCode执行的线程数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-优化Copy-Pod-Resources"><span class="nav-number">4.</span> <span class="nav-text">0x03 优化Copy Pod Resources</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-使用CCache"><span class="nav-number">5.</span> <span class="nav-text">0x04 使用CCache</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2015 - 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Kanxiang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
